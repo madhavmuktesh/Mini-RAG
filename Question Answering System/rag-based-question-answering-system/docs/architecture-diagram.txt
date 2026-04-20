@@ -1,0 +1,75 @@
+RAG-Based Question Answering System - Architecture Diagram
+
+User
+ │
+ ├── Upload PDF / TXT
+ │        │
+ │        ▼
+ │   [Upload API]
+ │   POST /documents/upload
+ │        │
+ │        ├── Save file to /data/uploads
+ │        │
+ │        └── Trigger background ingestion job
+ │                 │
+ │                 ▼
+ │         [Background Ingestion Job]
+ │                 │
+ │                 ▼
+ │         [Document Parser]
+ │          PDF / TXT text extraction
+ │                 │
+ │                 ▼
+ │           [Chunking Module]
+ │      Split into overlapping chunks
+ │                 │
+ │        ┌────────┴────────┐
+ │        ▼                 ▼
+ │ [Embedding Model]   [Metadata Store]
+ │ Sentence-Transformers   JSON / Local Files
+ │        │                 │
+ │        ▼                 │
+ │   [FAISS Vector Store]   │
+ │        │                 │
+ │        └──── Persist index/metadata ────> /data/index
+ │
+ │
+ ├── Check ingestion status
+ │        │
+ │        ▼
+ │   [Status API]
+ │   GET /documents/{id}/status
+ │        │
+ │        ▼
+ │   Read status from metadata store
+ │
+ │
+ └── Submit question
+          │
+          ▼
+      [Ask API]
+      POST /questions/ask
+          │
+          ▼
+      [Retriever / Similarity Search]
+          │
+          ├── Embed question using embedding model
+          ├── Search FAISS for top-k similar chunks
+          └── Fetch chunk text and source metadata
+          │
+          ▼
+      [Prompt Builder]
+          │
+          ▼
+      [Groq / LLM API]
+          │
+          ▼
+   Generated grounded answer
+          │
+          ▼
+Answer + sources + latency returned to user
+
+Notes:
+- The full document is read once during ingestion.
+- The document is split into overlapping chunks before embedding.
+- At question time, only the top relevant chunks are sent to the LLM, not the full PDF.
