@@ -309,7 +309,3 @@ A basic in-memory rate limiter is included to prevent excessive requests from a 
 - Automated evaluation with retrieval and answer-quality benchmarks
 
 ---
-
-## Author
-
-**Abinaya Lakshmi Emana**
